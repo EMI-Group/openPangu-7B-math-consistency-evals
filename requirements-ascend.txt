@@ -1,0 +1,15 @@
+# common
+tqdm
+datasets
+torch
+transformers
+python_dateutil
+# vllm
+# vllm-ascend
+
+# math_eval
+-e ./latex2sympy
+
+word2number
+Pebble
+timeout-decorator

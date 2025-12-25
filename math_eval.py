@@ -49,6 +49,11 @@ def parse_args():
         action="store_true",
         help="Few shot for multiple-choice questions, zero shot for others.",
     )
+    parser.add_argument(
+        "--pangu_think_mode",
+        choices=["slow", "fast", "adaptive"],
+        default="slow",
+    )
     args = parser.parse_args()
     args.top_p = (
         1 if args.temperature == 0 else args.top_p
@@ -78,7 +83,9 @@ def prepare_data(data_name, args):
     out_file_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}"
     output_dir = args.output_dir
 
-    out_file = f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}.jsonl"
+    out_file = (
+        f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}.jsonl"
+    )
     os.makedirs(f"{output_dir}/{data_name}", exist_ok=True)
 
     # load all processed samples
@@ -90,9 +97,7 @@ def prepare_data(data_name, args):
             if f.endswith(".jsonl") and f.startswith(out_file_prefix)
         ]
         for f in processed_files:
-            processed_samples.extend(
-                list(load_jsonl(f"{output_dir}/{data_name}/{f}"))
-            )
+            processed_samples.extend(list(load_jsonl(f"{output_dir}/{data_name}/{f}")))
 
     # dedepulicate
     processed_samples = {sample["idx"]: sample for sample in processed_samples}
@@ -103,41 +108,64 @@ def prepare_data(data_name, args):
 
 
 def setup(args):
-
     # import json
     # model_tokenizers = json.load(open("Qwen/model_tokenizer.json", "r"))
     # model_tokenizers[args.output_dir.split("/")[-1]] = args.model_name_or_path
     # json.dump(model_tokenizers, open("Qwen/model_tokenizer.json", "w"))
 
     # load model
-    
-    available_gpus = os.environ["CUDA_VISIBLE_DEVICES"].split(",")
+    if torch.cuda.is_available():
+        num_gpus = torch.cuda.device_count()
+        print(f"Using {num_gpus} GPU")
+    elif torch.npu.is_available():
+        num_gpus = torch.npu.device_count()
+        print(f"Using {num_gpus} NPU")
+    else:
+        raise ValueError("No GPU or NPU available.")
+
     data_list = args.data_names.split(",")
     need_eval_data_list = []
     if not args.overwrite:
         for data_name in data_list:
             out_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}"
-            out_file =  f"{args.output_dir}/{data_name}/{out_prefix}_s{args.start}_e{args.end}.jsonl"
+            out_file = f"{args.output_dir}/{data_name}/{out_prefix}_s{args.start}_e{args.end}.jsonl"
             out_metric_json = out_file.replace(".jsonl", "_metrics.json")
-            
+
             if os.path.exists(out_metric_json):
                 print(f"Skipping {data_name} because {out_metric_json} already exists.")
                 continue
             else:
                 need_eval_data_list.append(data_name)
-    
+
         if len(need_eval_data_list) == 0:
             print("All datasets already evaluated. Exiting.")
             exit(0)
         data_list = need_eval_data_list
-    
+
     if args.use_vllm:
+        if "pangu" in args.model_name_or_path.lower():
+            vllm_kwargs = dict(
+                max_num_seqs=32,
+                max_model_len=16384,
+                max_num_batched_tokens=4096,
+                tokenizer_mode="slow",
+                dtype="bfloat16",
+                distributed_executor_backend="mp",
+                gpu_memory_utilization=0.90,
+                enable_prefix_caching=False,
+                enable_chunked_prefill=False,
+            )
+        else:
+            vllm_kwargs = dict(
+                dtype="auto",
+            )
+
         llm = LLM(
             model=args.model_name_or_path,
-            tensor_parallel_size=len(available_gpus) // args.pipeline_parallel_size,
+            tensor_parallel_size=num_gpus // args.pipeline_parallel_size,
             pipeline_parallel_size=args.pipeline_parallel_size,
             trust_remote_code=True,
-            dtype="auto",
+            **vllm_kwargs,
         )
         # tokenizer = None
         # if args.apply_chat_template:
@@ -182,7 +210,7 @@ def is_multi_choice(answer):
 def main(llm, tokenizer, data_name, args):
     examples, processed_samples, out_file = prepare_data(data_name, args)
     print(f"data: {data_name}, remain samples: {len(examples)}, out_file: {out_file}")
-    
+
     if len(examples) > 0:
         print(examples[0])
 
@@ -198,8 +226,22 @@ def main(llm, tokenizer, data_name, args):
         example["gt_ans"] = gt_ans
 
         if args.apply_chat_template:
+            question = example["question"].strip()
+            if args.prompt_type == "pangu":
+                match args.pangu_think_mode:
+                    case "slow":
+                        pass
+                    case "fast":
+                        question = question + " /no_think"
+                    case "adaptive":
+                        question = question + " /auto_think"
+                    case _:
+                        raise ValueError(
+                            f"Invalid pangu_think_mode {args.pangu_think_mode}"
+                        )
+
             full_prompt = tokenizer.apply_chat_template(
-                [{"role": "user", "content": example["question"].strip()}],
+                [{"role": "user", "content": question}],
                 tokenize=False,
                 add_generation_prompt=True,
             )
@@ -240,7 +282,9 @@ def main(llm, tokenizer, data_name, args):
         samples.append(sample)
 
     # repeat n times
-    input_prompts = [sample["prompt"] for sample in samples for _ in range(args.n_sampling)]
+    input_prompts = [
+        sample["prompt"] for sample in samples for _ in range(args.n_sampling)
+    ]
     current_prompts = [(i, prompt) for i, prompt in enumerate(input_prompts)]
     end_prompts = []
 
@@ -256,11 +300,13 @@ def main(llm, tokenizer, data_name, args):
                 temperature=args.temperature,
                 top_p=args.top_p,
                 max_tokens=args.max_tokens_per_call,
-                n=1
+                n=1,
             ),
         )
 
-        outputs = sorted(outputs, key=lambda x: int(x.request_id))  # sort outputs by request_id
+        outputs = sorted(
+            outputs, key=lambda x: int(x.request_id)
+        )  # sort outputs by request_id
         outputs = [output.outputs[0].text for output in outputs]
     else:
         outputs = generate_completions(
@@ -268,7 +314,8 @@ def main(llm, tokenizer, data_name, args):
             tokenizer=tokenizer,
             prompts=prompts,
             max_new_tokens=args.max_tokens_per_call,
-            batch_size=16)
+            batch_size=16,
+        )
 
     assert len(outputs) == len(current_prompts)
 
@@ -285,7 +332,9 @@ def main(llm, tokenizer, data_name, args):
             prediction = None
         else:
             prediction = extract_answer(code, data_name)
-            prediction = strip_string(prediction, skip_unit=data_name in STRIP_EXCEPTIONS)
+            prediction = strip_string(
+                prediction, skip_unit=data_name in STRIP_EXCEPTIONS
+            )
         results.append(prediction)
         token_lengths.append(len(tokenizer.tokenize(code)))
 
@@ -297,11 +346,17 @@ def main(llm, tokenizer, data_name, args):
         preds = results[i * args.n_sampling : (i + 1) * args.n_sampling]
         preds = [val if (val is not None) else "None" for val in preds]
         token_len = token_lengths[i * args.n_sampling : (i + 1) * args.n_sampling]
-        
+
         for j in range(len(preds)):
-            if sample["gt"] in ["A", "B", "C", "D", "E"] and preds[j] not in ["A", "B", "C", "D", "E"]:
+            if sample["gt"] in ["A", "B", "C", "D", "E"] and preds[j] not in [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+            ]:
                 preds[j] = choice_answer_clean(code[j])
-            
+
             elif is_multi_choice(sample["gt"]) and not is_multi_choice(preds[j]):
                 preds[j] = "".join(
                     [c for c in preds[j] if c in ["A", "B", "C", "D", "E"]]
@@ -325,11 +380,11 @@ def main(llm, tokenizer, data_name, args):
         save_jsonl(all_samples, out_file)
 
     result_json["time_use_in_second"] = time_use
-    result_json["time_use_in_minite"] = (f"{int(time_use // 60)}:{int(time_use % 60):02d}")
+    result_json["time_use_in_minite"] = (
+        f"{int(time_use // 60)}:{int(time_use % 60):02d}"
+    )
 
-    with open(
-        out_file.replace(".jsonl", f"_metrics.json"), "w"
-    ) as f:
+    with open(out_file.replace(".jsonl", f"_metrics.json"), "w") as f:
         json.dump(result_json, f, indent=4)
     return result_json
 
