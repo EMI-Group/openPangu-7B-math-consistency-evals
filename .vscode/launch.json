@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Run math_eval.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/math_eval.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "TOKENIZERS_PARALLELISM": "false",
+                "CUDA_VISIBLE_DEVICES": "1,4",
+            },
+            "args": [
+                "--model_name_or_path", "Qwen/Qwen2.5-MATH-7B",
+                // "--data_name", "aime25",
+                "--data_name", "var_aime25",
+                "--data_dir", "data",
+                "--output_dir", "VAR_score_pass_16/Qwen2.5-MATH-7B",
+                "--prompt_type", "qwen25-math-cot",
+                "--num_test_sample", "-1",
+                "--temperature", "0.6",
+                "--n_sampling", "2",
+                "--top_p", "1",
+                "--use_vllm",
+                "--max_tokens_per_call", "8192",
+                "--save_outputs"
+            ],
+            // Optionally add an "env" object here to provide default values:
+
+        }
+    ]
+}

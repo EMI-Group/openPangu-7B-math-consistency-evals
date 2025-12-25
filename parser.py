@@ -499,10 +499,12 @@ def parse_ground_truth(example: Dict[str, Any], data_name):
     elif data_name == "olympiadbench":
         gt_cot, gt_ans = None, example["final_answer"][0].strip("$")
     elif data_name in [
+        "aime25",
+        "var_aime25",
         "aime24",
-        "VAR_aime24",
+        "var_aime24",
         "amc23",
-        "VAR_amc23"
+        "var_amc23"
     ]:
         gt_cot, gt_ans = None, example["answer"]
     else:

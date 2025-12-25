@@ -4,10 +4,11 @@ datasets
 torch
 transformers
 python_dateutil
+vllm==0.13.0
 
 # math_eval
-sympy==1.12
-antlr4-python3-runtime==4.11.1 # ! The version needs to be compatible with sympy.
+-e ./latex2sympy
+
 word2number
 Pebble
 timeout-decorator

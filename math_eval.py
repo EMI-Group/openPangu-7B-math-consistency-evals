@@ -118,7 +118,7 @@ def setup(args):
         for data_name in data_list:
             out_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}"
             out_file =  f"{args.output_dir}/{data_name}/{out_prefix}_s{args.start}_e{args.end}.jsonl"
-            out_metric_json = out_file.replace(".jsonl", f"_metrics.json")
+            out_metric_json = out_file.replace(".jsonl", "_metrics.json")
             
             if os.path.exists(out_metric_json):
                 print(f"Skipping {data_name} because {out_metric_json} already exists.")
@@ -139,11 +139,12 @@ def setup(args):
             trust_remote_code=True,
             dtype="auto",
         )
-        tokenizer = None
-        if args.apply_chat_template:
-            tokenizer = AutoTokenizer.from_pretrained(
-                args.model_name_or_path, trust_remote_code=True
-            )
+        # tokenizer = None
+        # if args.apply_chat_template:
+        #     tokenizer = AutoTokenizer.from_pretrained(
+        #         args.model_name_or_path, trust_remote_code=True
+        #     )
+        tokenizer = llm.get_tokenizer()
     else:
         llm, tokenizer = load_hf_lm_and_tokenizer(
             model_name_or_path=args.model_name_or_path,
@@ -180,7 +181,7 @@ def is_multi_choice(answer):
 
 def main(llm, tokenizer, data_name, args):
     examples, processed_samples, out_file = prepare_data(data_name, args)
-    print("data:", data_name, " ,remain samples:", len(examples))
+    print(f"data: {data_name}, remain samples: {len(examples)}, out_file: {out_file}")
     
     if len(examples) > 0:
         print(examples[0])
