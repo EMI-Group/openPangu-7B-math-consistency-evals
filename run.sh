@@ -1,3 +1,9 @@
+# for NPU
 export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3
 
 ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval.sh math500 1
+
+# For GPU
+export CUDA_VISIBLE_DEVICES=1,3
+
+CUDA_VISIBLE_DEVICES=1,3 ./eval.sh aime24 1

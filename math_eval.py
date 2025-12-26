@@ -144,10 +144,15 @@ def setup(args):
 
     if args.use_vllm:
         if "pangu" in args.model_name_or_path.lower():
+            if torch.cuda.is_available():
+                max_num_batched_tokens=16384
+            else:
+                max_num_batched_tokens=4096
+                
             vllm_kwargs = dict(
                 max_num_seqs=32,
                 max_model_len=16384,
-                max_num_batched_tokens=4096,
+                max_num_batched_tokens=max_num_batched_tokens,
                 tokenizer_mode="slow",
                 dtype="bfloat16",
                 distributed_executor_backend="mp",
