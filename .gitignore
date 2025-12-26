@@ -228,7 +228,7 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,macos
 
 # results
-VAR_score*/
+score_pass*/
 
 # cache files
 kernel_meta/
