@@ -220,7 +220,7 @@ def strip_string(string, skip_unit=False):
     # remove inverse spaces
     # replace \\ with \
     string = string.replace("\\!", "")
-    # string = string.replace("\\ ", "")
+    string = string.replace("\\ ", "") # required in pangu
     # string = string.replace("\\\\", "\\")
 
     # matrix
@@ -313,11 +313,16 @@ def strip_string(string, skip_unit=False):
     string = string.replace("\\mathbf", "")
 
     # use regex to remove \mbox{...}
+    # NOTE: special handle for math500
+    string = re.sub(r"\\mbox\{.*?\}\^?2", "", string)
+    string = re.sub(r"\\mbox\{.*?\}\^?3", "", string)
+
     string = re.sub(r"\\mbox{.*?}", "", string)
 
     # quote
-    string.replace("'", "")
-    string.replace('"', "")
+    # string.replace("'", "")
+    # string.replace('"', "")
+    # string = string.replace("'", "").replace('"', "") # above two lines does not affect the string
 
     # i, j
     if "j" in string and "i" not in string:
@@ -486,7 +491,8 @@ def parse_ground_truth(example: Dict[str, Any], data_name):
         return example["gt_cot"], gt_ans
 
     # parse ground truth
-    if data_name in ["math", "minerva_math", "math500", "VAR_math500"]:  #关键代码
+    # TODO: should we put math500 here?
+    if data_name in ["math", "minerva_math", "math500", "var_math500"]:  #关键代码
         gt_cot = example["solution"]
         gt_ans = extract_answer(gt_cot, data_name)
     elif data_name == "gsm8k":
