@@ -1,0 +1,3 @@
+export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3
+
+ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval.sh math500 1

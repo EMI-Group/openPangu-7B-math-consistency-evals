@@ -22,5 +22,6 @@ python3 -u math_eval.py \
         --top_p 1 \
         --use_vllm \
         --max_tokens_per_call 8192 \
+        --pangu_think_mode "slow" \
         --apply_chat_template \
         --save_outputs

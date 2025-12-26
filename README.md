@@ -1,13 +1,18 @@
-### Requirements
+## Requirements
 You can install the required packages with the following command:
+
+### Nvidia
 ```bash
-conda create -name ER_eval python==3.11.11
-cd latex2sympy
-pip install -e .
-cd ..
-pip install -r requirements.txt 
-pip install vllm==0.5.1 --no-build-isolation
-pip install transformers==4.42.3
+conda create -name pangu-dev python=3.12
+conda activate pangu-dev
+pip install -r requirements.txt
+```
+
+### Ascend
+
+Assume the vllm==0.9.2 and vllm-ascend==0.9.2rc1 are already installed, then:
+```bash
+pip install -r requirements-ascend.txt
 ```
 
 ## Acknowledgement
