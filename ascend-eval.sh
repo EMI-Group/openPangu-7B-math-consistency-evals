@@ -3,8 +3,7 @@
 set -ex
 # export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3
 export VLLM_USE_V1=1
-
-
+# export VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
 
 ############## SimpleRL ##############
 # DATA_NAME="amc23,var_amc23,aime24,var_aime24,aime25,var_aime25"
@@ -17,11 +16,11 @@ python3 -u math_eval.py \
         --output_dir "score_pass_${N_SAMPLES}/openPangu-Embedded-7B-V1.1" \
         --prompt_type "pangu" \
         --num_test_sample "-1" \
-        --temperature 0.6 \
+        --temperature 1.0 \
         --n_sampling ${N_SAMPLES} \
-        --top_p 1 \
+        --top_p 0.8 \
         --use_vllm \
-        --max_tokens_per_call 8192 \
         --pangu_think_mode "slow" \
         --apply_chat_template \
-        --save_outputs
+        --save_outputs \
+        --max_tokens_per_call 98304

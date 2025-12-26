@@ -80,11 +80,15 @@ def prepare_data(data_name, args):
     # get out_file name
     dt_string = datetime.now().strftime("%m-%d_%H-%M")
     model_name = "/".join(args.model_name_or_path.split("/")[-2:])
-    out_file_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}"
+    out_file_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}_top-p{args.top_p}"
+
+    if args.prompt_type == "pangu":
+        out_file_prefix += f"_{args.pangu_think_mode}"
+
     output_dir = args.output_dir
 
     out_file = (
-        f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}.jsonl"
+        f"{output_dir}/{data_name}/{out_file_prefix}.jsonl"
     )
     os.makedirs(f"{output_dir}/{data_name}", exist_ok=True)
 
@@ -127,8 +131,8 @@ def setup(args):
     need_eval_data_list = []
     if not args.overwrite:
         for data_name in data_list:
-            out_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}"
-            out_file = f"{args.output_dir}/{data_name}/{out_prefix}_s{args.start}_e{args.end}.jsonl"
+            out_file_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}_top-p{args.top_p}"
+            out_file = f"{args.output_dir}/{data_name}/{out_file_prefix}.jsonl"
             out_metric_json = out_file.replace(".jsonl", "_metrics.json")
 
             if os.path.exists(out_metric_json):
@@ -151,7 +155,7 @@ def setup(args):
                 
             vllm_kwargs = dict(
                 max_num_seqs=32,
-                max_model_len=32768,
+                max_model_len=131072,
                 # max_num_batched_tokens=max_num_batched_tokens,
                 tokenizer_mode="slow",
                 dtype="bfloat16",
@@ -169,6 +173,7 @@ def setup(args):
             model=args.model_name_or_path,
             tensor_parallel_size=num_gpus // args.pipeline_parallel_size,
             pipeline_parallel_size=args.pipeline_parallel_size,
+            # gpu_memory_utilization=0.8,
             trust_remote_code=True,
             **vllm_kwargs,
         )
