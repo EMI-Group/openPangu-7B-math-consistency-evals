@@ -15,5 +15,15 @@ Assume the vllm==0.9.2 and vllm-ascend==0.9.2rc1 are already installed, then:
 pip install -r requirements-ascend.txt
 ```
 
+## Evaluation
+
+```shell
+# eval on openPangu with avg@16 on amc23
+ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval.sh amc23 16
+
+# eval other model
+ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval-other.sh Qwen/Qwen2.5-MATH-7B aime24 16
+```
+
 ## Acknowledgement
 The codebase is adapted from [math-evaluation-harness](https://github.com/ZubinGou/math-evaluation-harness).
