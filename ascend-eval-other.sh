@@ -11,7 +11,7 @@ export VLLM_USE_V1=1
 
 MODEL_NAME_OR_PATH=${1:-"Qwen/Qwen2.5-MATH-7B"}
 DATA_NAME=${2:-"amc23,var_amc23,aime24,var_aime24,aime25,var_aime25"}
-N_SAMPLES=${3:-"1"}
+N_SAMPLES=${3:-"16"}
 
 
 declare -A MODEL_PROMPT_MAP=(

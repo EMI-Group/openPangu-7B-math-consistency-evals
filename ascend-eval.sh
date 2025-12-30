@@ -8,7 +8,7 @@ export VLLM_USE_V1=1
 ############## SimpleRL ##############
 # DATA_NAME="amc23,var_amc23,aime24,var_aime24,aime25,var_aime25"
 DATA_NAME=${1:-"amc23,var_amc23,aime24,var_aime24,aime25,var_aime25"}
-N_SAMPLES=${2:-"1"}
+N_SAMPLES=${2:-"16"}
 
 python3 -u math_eval.py \
         --model_name_or_path /opt/pangu/openPangu-Embedded-7B-V1.1 \

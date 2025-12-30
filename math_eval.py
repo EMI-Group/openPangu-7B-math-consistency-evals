@@ -160,7 +160,7 @@ def setup(args):
                 tokenizer_mode="slow",
                 dtype="bfloat16",
                 distributed_executor_backend="mp",
-                gpu_memory_utilization=0.90,
+                gpu_memory_utilization=0.95,
                 enable_prefix_caching=False,
                 enable_chunked_prefill=False,
             )
