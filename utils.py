@@ -76,6 +76,11 @@ PROMPT_TEMPLATES = {
         "{output}",
         "\n\n",
     ),
+    "deepseek-r1": (
+        "<｜begin▁of▁sentence｜><｜User｜>{input}<｜Assistant｜><think>\n",
+        "{output}",
+        "\n\n",
+    ),
     "llama": (
         "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nCutting Knowledge Date: December 2023\nToday Date: 03 Jun 2025\n\nPlease reason step by step, and put your final answer within \\boxed{{}}.<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{input}<|eot_id|><|start_header_id|>assistant<|end_header_id|>",
         "{output}",
