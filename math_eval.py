@@ -51,7 +51,7 @@ def parse_args():
     )
     parser.add_argument(
         "--pangu_think_mode",
-        choices=["slow", "fast", "adaptive"],
+        choices=["slow", "fast", "auto"],
         default="slow",
     )
     args = parser.parse_args()
@@ -253,7 +253,7 @@ def main(llm, tokenizer, data_name, args):
                         pass
                     case "fast":
                         question = question + " /no_think"
-                    case "adaptive":
+                    case "auto":
                         question = question + " /auto_think"
                     case _:
                         raise ValueError(
