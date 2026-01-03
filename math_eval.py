@@ -87,9 +87,7 @@ def prepare_data(data_name, args):
 
     output_dir = args.output_dir
 
-    out_file = (
-        f"{output_dir}/{data_name}/{out_file_prefix}.jsonl"
-    )
+    out_file = f"{output_dir}/{data_name}/{out_file_prefix}.jsonl"
     os.makedirs(f"{output_dir}/{data_name}", exist_ok=True)
 
     # load all processed samples
@@ -152,7 +150,7 @@ def setup(args):
             #     max_num_batched_tokens=32768
             # else:
             #     max_num_batched_tokens=4096
-                
+
             vllm_kwargs = dict(
                 max_num_seqs=32,
                 max_model_len=131072,
@@ -163,11 +161,23 @@ def setup(args):
                 gpu_memory_utilization=0.95,
                 enable_prefix_caching=False,
                 enable_chunked_prefill=False,
+                hf_overrides={"max_position_embeddings": 131072},
             )
         else:
             vllm_kwargs = dict(
                 dtype="auto",
             )
+
+            if args.prompt_type == "qwen25-math-cot":
+                vllm_kwargs["hf_overrides"] = {
+                    "max_position_embeddings": 131072,
+                    # "rope_theta": 1000000,
+                    # "rope_scaling": {
+                    #     "rope_type": "yarn",
+                    #     "factor": 32.0,
+                    #     "original_max_position_embeddings": 4096,
+                    # },
+                }
 
         llm = LLM(
             model=args.model_name_or_path,
