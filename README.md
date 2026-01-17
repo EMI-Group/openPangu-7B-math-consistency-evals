@@ -28,6 +28,11 @@ ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval-other.sh Qwen/Qwen2.5-MATH-7B aime24
 python ./score_analysis.py --dataset amc23
 ```
 
+If you want to create a new evaluation dataset:
+```shell
+python ./csv2json.py
+```
+
 ## Acknowledgement
 The codebase is adapted from [math-evaluation-harness](https://github.com/ZubinGou/math-evaluation-harness).
 
