@@ -18,8 +18,8 @@ pip install -r requirements-ascend.txt
 ## Evaluation
 
 ```shell
-# eval on openPangu with avg@16 on amc23
-ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval.sh amc23 16
+# eval of openPangu (slow thinking) on amc23 for avg@16
+ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval.sh amc23 16 slow
 
 # eval other model
 ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval-other.sh Qwen/Qwen2.5-MATH-7B aime24 16
@@ -30,3 +30,5 @@ python ./score_analysis.py --dataset amc23
 
 ## Acknowledgement
 The codebase is adapted from [math-evaluation-harness](https://github.com/ZubinGou/math-evaluation-harness).
+
+We would like to express our gratitude to the OpenPangu team for open-sourcing the [OpenPangu-Embedded-7B-V1.1](https://ai.gitcode.com/ascend-tribe/openPangu-Embedded-7B-V1.1) model. Their contributions to the community have been instrumental in this evaluation project.
