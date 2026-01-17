@@ -23,6 +23,9 @@ ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval.sh amc23 16
 
 # eval other model
 ASCEND_RT_VISIBLE_DEVICES=0,1 ./ascend-eval-other.sh Qwen/Qwen2.5-MATH-7B aime24 16
+
+# Summarize eval metrics on amc23 and var_amc23:
+python ./score_analysis.py --dataset amc23
 ```
 
 ## Acknowledgement

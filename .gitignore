@@ -229,6 +229,7 @@ pyrightconfig.json
 
 # results
 score_pass*/
+debug/
 
 # cache files
 kernel_meta/
